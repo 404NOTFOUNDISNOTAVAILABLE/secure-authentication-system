@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-shield-lock me-2" viewBox="0 0 16 16">
+                <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.775 11.775 0 0 1-2.517 2.453 7.159 7.159 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7.158 7.158 0 0 1-1.048-.625 11.777 11.777 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 62.456 62.456 0 0 1 5.072.56z"/>
+                <path d="M8 5a1.5 1.5 0 0 1 .5 1.5v3.5a.5.5 0 0 1-1 0V6.5A1.5 1.5 0 0 1 8 5zm4 5.5a.5.5 0 0 1-1 0V7.5a.5.5 0 0 1 1 0v3z"/>
+            </svg>
+            SecureAuth
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard/profile">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/dashboard/security">Security</a>
+                </li>
+            </ul>
+            <div class="d-flex">
+                <a href="/logout" class="btn btn-outline-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Security Settings</h1>
+            <p class="lead">Manage your account security settings and review security activity.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Password Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Password</h5>
+                </div>
+                <div class="card-body">
+                    {% if password_error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ password_error }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if password_success %}
+                    <div class="alert alert-success" role="alert">
+                        {{ password_success }}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" action="/change-password">
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                            <div class="progress mt-2" style="height: 5px;">
+                                <div id="passwordStrengthBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div id="passwordFeedback" class="form-text"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            <div id="passwordMatchFeedback" class="form-text"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </form>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">Last password change: {{ user.last_password_change.strftime('%Y-%m-%d %H:%M') if user.last_password_change else 'Never' }}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Multi-Factor Authentication Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Multi-Factor Authentication</h5>
+                </div>
+                <div class="card-body">
+                    {% if mfa_success %}
+                    <div class="alert alert-success" role="alert">
+                        {{ mfa_success }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if totp_error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ totp_error }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if totp_success %}
+                    <div class="alert alert-success" role="alert">
+                        {{ totp_success }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <h6>Email Verification</h6>
+                        <p>Receive a verification code via email when logging in.</p>
+                        <form method="post" action="/toggle-mfa">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="mfa_enabled" {% if user.mfa_enabled %}checked{% endif %} onchange="this.form.submit()">
+                                <label class="form-check-label" for="mfa_enabled">
+                                    {% if user.mfa_enabled %}Enabled{% else %}Disabled{% endif %}
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>Authenticator App</h6>
+                        <p>Use an authenticator app like Google Authenticator or Authy for verification.</p>
+                        
+                        {% if user.totp_enabled %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-success fw-bold">Enabled</span>
+                            <a href="/backup-codes" class="btn btn-outline-primary btn-sm">Manage Backup Codes</a>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#disableTOTPModal">
+                                Disable Authenticator App
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-warning fw-bold">Not Set Up</span>
+                            <a href="/setup-totp" class="btn btn-primary btn-sm">Set Up Authenticator App</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Activity Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Security Activity</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Recent Security Events</h6>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Activity</th>
+                                    <th>IP Address</th>
+                                    <th>Date & Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if security_activities %}
+                                    {% for activity in security_activities %}
+                                    <tr>
+                                        <td>{{ activity.type }}</td>
+                                        <td>{{ activity.ip_address }}</td>
+                                        <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" class="text-center">No security activities found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h6 class="mt-4">Recent Login Attempts</h6>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>IP Address</th>
+                                    <th>Date & Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if login_attempts %}
+                                    {% for attempt in login_attempts %}
+                                    <tr>
+                                        <td>
+                                            {% if attempt.success %}
+                                                <span class="text-success">Success</span>
+                                            {% elif attempt.blocked_by_rate_limit %}
+                                                <span class="text-danger">Rate Limited</span>
+                                            {% else %}
+                                                <span class="text-danger">Failed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ attempt.ip_address }}</td>
+                                        <td>{{ attempt.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" class="text-center">No login attempts found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Security Status Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Security Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Security Score</h6>
+                        {% set security_score = 0 %}
+                        {% if user.mfa_enabled %}{% set security_score = security_score + 25 %}{% endif %}
+                        {% if user.totp_enabled %}{% set security_score = security_score + 50 %}{% endif %}
+                        {% if user.last_password_change and (user.last_password_change > (user.created_at + timedelta(days=90))) %}{% set security_score = security_score + 25 %}{% endif %}
+                        
+                        <div class="progress">
+                            <div id="security-score-bar" 
+                                 class="progress-bar" 
+                                 role="progressbar" 
+                                 data-score="{{ security_score }}"
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">{{ security_score }}%</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Account Status</h6>
+                        {% if user.account_locked %}
+                            <div class="alert alert-danger">
+                                <strong>Account Locked</strong>
+                                <p>Your account is currently locked due to multiple failed login attempts.</p>
+                                <p>Locked until: {{ user.account_locked_until.strftime('%Y-%m-%d %H:%M') }}</p>
+                                <form method="post" action="/unlock-account">
+                                    <button type="submit" class="btn btn-primary btn-sm">Unlock Account</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success">
+                                <strong>Account Active</strong>
+                                <p>Your account is currently active and in good standing.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <h6>Security Recommendations</h6>
+                        <ul class="list-group">
+                            {% if not user.mfa_enabled %}
+                            <li class="list-group-item list-group-item-warning">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle me-2" viewBox="0 0 16 16">
+                                    <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
+                                    <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/>
+                                </svg>
+                                Enable email verification
+                            </li>
+                            {% endif %}
+                            
+                            {% if not user.totp_enabled %}
+                            <li class="list-group-item list-group-item-warning">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle me-2" viewBox="0 0 16 16">
+                                    <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
+                                    <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/>
+                                </svg>
+                                Set up authenticator app
+                            </li>
+                            {% endif %}
+                            
+                            {% if not user.last_password_change or (user.last_password_change < (user.created_at + timedelta(days=90))) %}
+                            <li class="list-group-item list-group-item-warning">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle me-2" viewBox="0 0 16 16">
+                                    <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
+                                    <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/>
+                                </svg>
+                                Change your password regularly
+                            </li>
+                            {% endif %}
+                            
+                            {% if user.mfa_enabled and user.totp_enabled and user.last_password_change and (user.last_password_change > (user.created_at + timedelta(days=90))) %}
+                            <li class="list-group-item list-group-item-success">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle me-2" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                                </svg>
+                                Your account is well-secured!
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Tips Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Security Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Use a strong, unique password</li>
+                        <li class="list-group-item">Enable multi-factor authentication</li>
+                        <li class="list-group-item">Keep your recovery codes in a safe place</li>
+                        <li class="list-group-item">Don't share your account credentials</li>
+                        <li class="list-group-item">Check your account activity regularly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disable TOTP Modal -->
+<div class="modal fade" id="disableTOTPModal" tabindex="-1" aria-labelledby="disableTOTPModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="disableTOTPModalLabel">Disable Authenticator App</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to disable the authenticator app? This will also remove all your backup codes.</p>
+                <p class="text-danger">This will reduce the security of your account.</p>
+                
+                <form method="post" action="/disable-totp">
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Enter your password to confirm</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger">Disable Authenticator App</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const scoreBar = document.getElementById('security-score-bar');
+        if (scoreBar) {
+            const score = parseInt(scoreBar.getAttribute('data-score') || '0');
+            
+            // Set the width
+            scoreBar.style.width = score + '%';
+            
+            // Set the aria-valuenow attribute
+            scoreBar.setAttribute('aria-valuenow', score);
+            
+            // Set the appropriate color class
+            if (score < 50) {
+                scoreBar.classList.add('bg-danger');
+            } else if (score < 75) {
+                scoreBar.classList.add('bg-warning');
+            } else {
+                scoreBar.classList.add('bg-success');
+            }
+        }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setupPasswordStrengthChecker(
+            'new_password',
+            'passwordStrengthBar',
+            'passwordFeedback',
+            'confirm_password',
+            'passwordMatchFeedback'
+        );
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+body {
+    background-color: #f8f9fa;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+  }
+  
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  }
+  
+  .btn-primary {
+    background-color: #4361ee;
+    border-color: #4361ee;
+  }
+  
+  .btn-primary:hover {
+    background-color: #3a56d4;
+    border-color: #3a56d4;
+  }
+  
+  .btn-outline-primary {
+    color: #4361ee;
+    border-color: #4361ee;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: #4361ee;
+    border-color: #4361ee;
+  }
+  
+  .text-primary {
+    color: #4361ee !important;
+  }
+  
+  .alert {
+    border-radius: 8px;
+  }
+  

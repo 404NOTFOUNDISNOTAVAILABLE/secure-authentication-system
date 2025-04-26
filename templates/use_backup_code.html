@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Use Backup Code</h2>
+                
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+                
+                <p class="text-center">Enter one of your backup codes to access your account</p>
+                
+                <form method="post" action="/use-backup-code">
+                    <div class="mb-3">
+                        <label for="code" class="form-label">Backup Code</label>
+                        <input type="text" class="form-control" id="code" name="code" placeholder="XXXX-XXXX-XXXX" required autofocus>
+                        <div class="form-text">Backup codes are in the format XXXX-XXXX-XXXX</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Verify</button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="/verify-totp-login" class="btn btn-link">Back to authenticator verification</a>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="/logout" class="btn btn-link">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

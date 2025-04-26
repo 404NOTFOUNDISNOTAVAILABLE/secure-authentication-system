@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Login</h2>
+                
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                    {% if "reset your password" in error %}
+                    <div class="mt-2">
+                        <a href="/forgot-password" class="btn btn-outline-primary btn-sm">Reset Password</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}  
+                
+                {% if request.query_params.get('reset') == 'success' %}
+                <div class="alert alert-success" role="alert">
+                    Your password has been reset successfully. You can now login with your new password.
+                </div>
+                {% endif %}
+                
+                <form method="post" action="/login">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="/forgot-password">Forgot your password?</a>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    Don't have an account? <a href="/register">Register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
